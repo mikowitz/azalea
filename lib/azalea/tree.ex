@@ -1,10 +1,11 @@
 defmodule Azalea.Tree do
-  alias __MODULE__
-
   @type t :: %Azalea.Tree{value: any(), children: [Azalea.Tree.t]}
 
   defstruct [:value, :children, :id]
 
+  @spec new :: Azalea.Tree.t
+  @spec new(any()) :: Azalea.Tree.t
+  @spec new(any(), [any()]) :: Azalea.Tree.t
   def new, do: new(nil)
   def new(value), do: new(value, [])
   def new(value, children) do
@@ -12,9 +13,9 @@ defmodule Azalea.Tree do
   end
 
   defp wrap_children(children) when is_list(children) do
-    Enum.map(children, &map_child/1)
+    Enum.map(children, &wrap_child/1)
   end
 
-  defp map_child(tree = %__MODULE__{}), do: tree
-  defp map_child(child), do: new(child)
+  defp wrap_child(tree = %__MODULE__{}), do: tree
+  defp wrap_child(child), do: new(child)
 end
