@@ -60,22 +60,38 @@ defmodule Azalea.Tree do
   defp wrap_child(tree = %__MODULE__{}), do: tree
   defp wrap_child(child), do: new(child)
 
-  defimpl Enumerable do
-    def count(tree), do: {:ok, _do_count(tree)}
-    defp _do_count(%Azalea.Tree{children: []}), do: 1
-    defp _do_count(tree) do
-      1 + Enum.sum(Enum.map(tree.children, &_do_count/1))
-    end
+  @behaviour Access
 
-    def member?(tree, child) do
-      {:ok, _is_member?(tree.children, child)}
+  def fetch(tree = %Azalea.Tree{children: children}, index) when is_integer(index) do
+    case Enum.at(children, index) do
+      nil -> :error
+      child -> {:ok, child}
     end
-    defp _is_member?([], _), do: false
-    defp _is_member?([c|_], c), do: true
-    defp _is_member?([_|t], c), do: _is_member?(t, c)
+  end
 
-    def reduce(tree, {:cont, acc}, fun) do
-      Enum.reduce(tree.children, fun.(tree, acc), &reduce(&1, &2, fun))
+  def get(tree, index, default \\ nil) when is_integer(index) do
+    case fetch(tree, index) do
+      {:ok, child} -> child
+      :error -> default
+    end
+  end
+
+  def get_and_update(tree, index, fun) do
+    value = get(tree, index)
+
+    case fun.(value) do
+      {get, update} ->
+        {get, %{tree | children: List.replace_at(tree.children, index, update)}}
+      :pop ->
+        {value, %{tree | children: List.delete_at(tree.children, index)}}
+      x -> raise "#{inspect x}"
+    end
+  end
+
+  def pop(tree, index) do
+    case get(tree, index) do
+      nil -> {nil, tree}
+      child -> {child, %{tree | children: List.delete_at(tree.children, index)}}
     end
   end
 end

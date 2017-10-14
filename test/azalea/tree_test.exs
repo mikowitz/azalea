@@ -122,4 +122,50 @@ defmodule Azalea.TreeTest do
       assert A.Tree.reduce(A.Tree.map(context.tree, mapper), [], reducer) == ~w(a b c d e f g h)
     end
   end
+
+  describe "Access" do
+    setup do
+      tree = A.Tree.new(:a, [
+        :b,
+        A.Tree.new(:c, [
+          :d,
+          A.Tree.new(:e, [:f])
+        ]),
+        A.Tree.new(:g, [
+          A.Tree.new(:h)
+        ])
+      ])
+      reducer = fn tree, acc -> acc ++ [tree.value] end
+      {:ok, %{tree: tree, reducer: reducer}}
+    end
+
+    test "get_in/2 returns the child at the given nested path", context do
+      b = get_in(context.tree, [0])
+      assert b.value == :b
+      f = get_in(context.tree, [1, 1, 0])
+      assert f.value == :f
+    end
+
+    test "put_in/3 writes a new child at the given nested path", context do
+      tree = put_in(context.tree, [1, 0], A.Tree.new(:i, [:j]))
+      assert A.Tree.reduce(tree, [], context.reducer) == ~w(a b c i j e f g h)a
+    end
+
+    test "get_and_update_in/2 returns the child at the given path, and the updated tree", context do
+      {e, tree} = get_and_update_in(context.tree, [1, 1], &{&1, A.Tree.new(:i, [:j, :k])})
+      assert A.Tree.reduce(e, [], context.reducer) == ~w(e f)a
+      assert A.Tree.reduce(tree, [], context.reducer) == ~w(a b c d i j k g h)a
+    end
+
+    test "update_in/3 returns the tree with the function applied to the child at the given path", context do
+      tree = update_in(context.tree, [1], fn tree -> %{tree | value: to_string(tree.value)} end)
+      assert A.Tree.reduce(tree, [], context.reducer) == [:a, :b, "c", :d, :e, :f, :g, :h]
+    end
+
+    test "pop_in/2 returns the child, and the tree minus that child", context do
+      {g, tree} = pop_in(context.tree, [2])
+      assert A.Tree.reduce(g, [], context.reducer) == ~w(g h)a
+      assert A.Tree.reduce(tree, [], context.reducer) == ~w(a b c d e f)a
+    end
+  end
 end
