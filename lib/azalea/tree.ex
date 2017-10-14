@@ -1,11 +1,11 @@
 defmodule Azalea.Tree do
-  @type t :: %Azalea.Tree{value: any(), children: [Azalea.Tree.t]}
+  @type t :: %Azalea.Tree{value: any, children: [Azalea.Tree.t]}
 
   defstruct [:value, :children, :id]
 
   @spec new :: Azalea.Tree.t
-  @spec new(any()) :: Azalea.Tree.t
-  @spec new(any(), [any()]) :: Azalea.Tree.t
+  @spec new(any) :: Azalea.Tree.t
+  @spec new(any, [any]) :: Azalea.Tree.t
   def new, do: new(nil)
   def new(value), do: new(value, [])
   def new(value, children) do
@@ -14,17 +14,17 @@ defmodule Azalea.Tree do
 
   @spec is_child?(Azalea.Tree.t, Azalea.Tree.t) :: boolean
   def is_child?(child, tree) do
-    Enum.member?(tree.children, child)
+    Enum.member?(tree, child)
   end
 
-  @spec add_child(Azalea.Tree.t, any()) :: Azalea.Tree.t
+  @spec add_child(Azalea.Tree.t, any) :: Azalea.Tree.t
   def add_child(tree = %Azalea.Tree{}, child) do
     with child <- wrap_child(child) do
       %{tree | children: [child|tree.children]}
     end
   end
 
-  @spec insert_child(Azalea.Tree.t, any(), integer()) :: Azalea.Tree.t
+  @spec insert_child(Azalea.Tree.t, any, integer) :: Azalea.Tree.t
   def insert_child(tree, child, index) do
     with child <- wrap_child(child) do
       %{tree | children: List.insert_at(tree.children, index, child)}
@@ -37,21 +37,28 @@ defmodule Azalea.Tree do
     {child, %{tree | children: children}}
   end
 
-  @spec remove_child(Azalea.Tree.t, integer()) :: {Azalea.Tree.t, Azalea.Tree.t}
+  @spec remove_child(Azalea.Tree.t, integer) :: {Azalea.Tree.t, Azalea.Tree.t}
   def remove_child(tree = %Azalea.Tree{}, index) do
     {child, children} = List.pop_at(tree.children, index)
     {child, %{tree | children: children}}
   end
+
+  @spec map(Azalea.Tree.t, fun) :: Azalea.Tree.t
+  def map(tree, fun) do
+    %{fun.(tree) | children: Enum.map(tree.children, &map(&1, fun))}
+  end
+
+  @spec length(Azalea.Tree.t) :: integer
+  def length(tree), do: Enum.count(tree)
+
+  @spec reduce(Azalea.Tree.t, term, (term, term -> term)) :: term
+  def reduce(tree, acc, fun), do: Enum.reduce(tree, acc, fun)
 
   defp wrap_children(children) when is_list(children) do
     Enum.map(children, &wrap_child/1)
   end
   defp wrap_child(tree = %__MODULE__{}), do: tree
   defp wrap_child(child), do: new(child)
-
-  def map(tree, fun) do
-    %{fun.(tree) | children: Enum.map(tree.children, &map(&1, fun))}
-  end
 
   defimpl Enumerable do
     def count(tree), do: {:ok, _do_count(tree)}

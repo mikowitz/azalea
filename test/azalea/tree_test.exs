@@ -100,7 +100,7 @@ defmodule Azalea.TreeTest do
     end
 
     test "Enum.count/1 returns the full size of the tree", context do
-      assert Enum.count(context.tree) == 8
+      assert A.Tree.length(context.tree) == 8
     end
 
     test "Enum.member?/2 returns whether the child is in the tree's children" do
@@ -108,18 +108,18 @@ defmodule Azalea.TreeTest do
                 other_child <- gen_tree()
       do
         Enum.each(tree.children, fn child ->
-          assert Enum.member?(tree, child)
+          assert A.Tree.is_child?(child, tree)
         end)
-        refute Enum.member?(tree, other_child)
+        refute A.Tree.is_child?(other_child, tree)
       end
     end
 
     test "Enum.reduce/3 reduces the tree to a single value", context do
       reducer = fn tree, acc -> acc ++ [tree.value] end
-      assert Enum.reduce(context.tree, [], reducer) == ~w(a b c d e f g h)a
+      assert A.Tree.reduce(context.tree, [], reducer) == ~w(a b c d e f g h)a
 
       mapper = fn tree -> %{tree | value: to_string(tree.value)} end
-      assert Enum.reduce(A.Tree.map(context.tree, mapper), [], reducer) == ~w(a b c d e f g h)
+      assert A.Tree.reduce(A.Tree.map(context.tree, mapper), [], reducer) == ~w(a b c d e f g h)
     end
   end
 end
