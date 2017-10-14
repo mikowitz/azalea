@@ -24,9 +24,22 @@ defmodule Azalea.Tree do
     end
   end
 
+  @spec insert_child(Azalea.Tree.t, any(), integer()) :: Azalea.Tree.t
+  def insert_child(tree, child, index) do
+    with child <- wrap_child(child) do
+      %{tree | children: List.insert_at(tree.children, index, child)}
+    end
+  end
+
   @spec pop_child(Azalea.Tree.t) :: {Azalea.Tree.t, Azalea.Tree.t}
   def pop_child(tree = %Azalea.Tree{}) do
     {child, children} = List.pop_at(tree.children, 0)
+    {child, %{tree | children: children}}
+  end
+
+  @spec remove_child(Azalea.Tree.t, integer()) :: {Azalea.Tree.t, Azalea.Tree.t}
+  def remove_child(tree = %Azalea.Tree{}, index) do
+    {child, children} = List.pop_at(tree.children, index)
     {child, %{tree | children: children}}
   end
 

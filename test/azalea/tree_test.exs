@@ -51,6 +51,16 @@ defmodule Azalea.TreeTest do
     end
   end
 
+  test "insert_child/3 adds `child` to `tree` at `index`" do
+    check all tree <- gen_tree(),
+              child <- gen_tree(),
+              index <- StreamData.integer(0..length(tree.children)-1)
+    do
+      tree = A.Tree.insert_child(tree, child, index)
+      assert child == Enum.at(tree.children, index)
+    end
+  end
+
   test "pop_child/1 removes the tree's first child" do
     check all tree <- gen_tree(),
               tree.children != []
@@ -59,6 +69,18 @@ defmodule Azalea.TreeTest do
       {child, tree} = A.Tree.pop_child(tree)
       refute A.Tree.is_child?(child, tree)
       assert child == Enum.at(original_children, 0)
+    end
+  end
+
+  test "remove_child/2 removes the child at the given index" do
+    check all tree <- gen_tree(),
+              tree.children != [],
+              index <- StreamData.integer(0..length(tree.children)-1)
+    do
+      original_children = tree.children
+      {child, tree} = A.Tree.remove_child(tree, index)
+      refute A.Tree.is_child?(child, tree)
+      assert child == Enum.at(original_children, index)
     end
   end
 end
