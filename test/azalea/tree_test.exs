@@ -83,4 +83,40 @@ defmodule Azalea.TreeTest do
       assert child == Enum.at(original_children, index)
     end
   end
+
+  describe "Enumerable" do
+    setup do
+      tree = A.Tree.new(:a, [
+        :b,
+        A.Tree.new(:c, [
+          :d,
+          A.Tree.new(:e, [:f])
+        ]),
+        A.Tree.new(:g, [
+          A.Tree.new(:h)
+        ])
+      ])
+      {:ok, %{tree: tree}}
+    end
+
+    test "Enum.count/1 returns the full size of the tree", context do
+      assert Enum.count(context.tree) == 8
+    end
+
+    test "Enum.member?/2 returns whether the child is in the tree's children" do
+      check all tree <- gen_tree(),
+                other_child <- gen_tree()
+      do
+        Enum.each(tree.children, fn child ->
+          assert Enum.member?(tree, child)
+        end)
+        refute Enum.member?(tree, other_child)
+      end
+    end
+
+    test "Enum.reduce/3 reduces the tree to a single value", context do
+      reducer = fn tree, acc -> acc ++ [tree.value] end
+      assert Enum.reduce(context.tree, [], reducer) == [:a, :b, :c, :d, :e, :f, :g, :h]
+    end
+  end
 end
