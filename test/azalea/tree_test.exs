@@ -116,7 +116,10 @@ defmodule Azalea.TreeTest do
 
     test "Enum.reduce/3 reduces the tree to a single value", context do
       reducer = fn tree, acc -> acc ++ [tree.value] end
-      assert Enum.reduce(context.tree, [], reducer) == [:a, :b, :c, :d, :e, :f, :g, :h]
+      assert Enum.reduce(context.tree, [], reducer) == ~w(a b c d e f g h)a
+
+      mapper = fn tree -> %{tree | value: to_string(tree.value)} end
+      assert Enum.reduce(A.Tree.map(context.tree, mapper), [], reducer) == ~w(a b c d e f g h)
     end
   end
 end

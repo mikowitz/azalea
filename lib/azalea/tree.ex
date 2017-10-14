@@ -49,6 +49,10 @@ defmodule Azalea.Tree do
   defp wrap_child(tree = %__MODULE__{}), do: tree
   defp wrap_child(child), do: new(child)
 
+  def map(tree, fun) do
+    %{fun.(tree) | children: Enum.map(tree.children, &map(&1, fun))}
+  end
+
   defimpl Enumerable do
     def count(tree), do: {:ok, _do_count(tree)}
     defp _do_count(%Azalea.Tree{children: []}), do: 1
