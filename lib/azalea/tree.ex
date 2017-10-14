@@ -54,6 +54,25 @@ defmodule Azalea.Tree do
   @spec reduce(Azalea.Tree.t, term, (term, term -> term)) :: term
   def reduce(tree, acc, fun), do: Enum.reduce(tree, acc, fun)
 
+  @spec path_to(Azalea.Tree.t, Azalea.Tree.t) :: [Azalea.Tree.t]
+  def path_to(child, tree) do
+    find_path(tree, child, [])
+  end
+
+  defp find_path(tree, target, acc) when tree == target do
+    [tree|acc]
+  end
+  defp find_path(%Azalea.Tree{children: []}, _, _), do: nil
+  defp find_path(tree = %Azalea.Tree{children: children}, target, acc) do
+    [tree | find_path(children, target, acc)]
+  end
+  defp find_path(trees, target, acc) when is_list(trees) do
+    Enum.find(
+      Enum.map(trees, &find_path(&1, target, acc)),
+      &(!is_nil(&1))
+    )
+  end
+
   defp wrap_children(children) when is_list(children) do
     Enum.map(children, &wrap_child/1)
   end
@@ -62,7 +81,7 @@ defmodule Azalea.Tree do
 
   @behaviour Access
 
-  def fetch(tree = %Azalea.Tree{children: children}, index) when is_integer(index) do
+  def fetch(%Azalea.Tree{children: children}, index) when is_integer(index) do
     case Enum.at(children, index) do
       nil -> :error
       child -> {:ok, child}

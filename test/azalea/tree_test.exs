@@ -5,6 +5,21 @@ defmodule Azalea.TreeTest do
 
   alias Azalea, as: A
 
+  setup do
+    tree = A.Tree.new(:a, [
+      :b,
+      A.Tree.new(:c, [
+        :d,
+        A.Tree.new(:e, [:f])
+      ]),
+      A.Tree.new(:g, [
+        A.Tree.new(:h)
+      ])
+    ])
+    reducer = fn tree, acc -> acc ++ [tree.value] end
+    {:ok, %{tree: tree, reducer: reducer}}
+  end
+
   describe "creating a new tree" do
     test ".new/0 assigns a value of `nil` and an empty list of children" do
       tree = A.Tree.new()
@@ -85,20 +100,6 @@ defmodule Azalea.TreeTest do
   end
 
   describe "Enumerable" do
-    setup do
-      tree = A.Tree.new(:a, [
-        :b,
-        A.Tree.new(:c, [
-          :d,
-          A.Tree.new(:e, [:f])
-        ]),
-        A.Tree.new(:g, [
-          A.Tree.new(:h)
-        ])
-      ])
-      {:ok, %{tree: tree}}
-    end
-
     test "Enum.count/1 returns the full size of the tree", context do
       assert A.Tree.length(context.tree) == 8
     end
@@ -124,21 +125,6 @@ defmodule Azalea.TreeTest do
   end
 
   describe "Access" do
-    setup do
-      tree = A.Tree.new(:a, [
-        :b,
-        A.Tree.new(:c, [
-          :d,
-          A.Tree.new(:e, [:f])
-        ]),
-        A.Tree.new(:g, [
-          A.Tree.new(:h)
-        ])
-      ])
-      reducer = fn tree, acc -> acc ++ [tree.value] end
-      {:ok, %{tree: tree, reducer: reducer}}
-    end
-
     test "get_in/2 returns the child at the given nested path", context do
       b = get_in(context.tree, [0])
       assert b.value == :b
@@ -167,5 +153,11 @@ defmodule Azalea.TreeTest do
       assert A.Tree.reduce(g, [], context.reducer) == ~w(g h)a
       assert A.Tree.reduce(tree, [], context.reducer) == ~w(a b c d e f)a
     end
+  end
+
+  test "path_to/2 returns a list of trees from the `root` to the given child, or nil if none exists", context do
+    f = get_in(context.tree, [1, 1, 0])
+    path = A.Tree.path_to(f, context.tree)
+    assert Enum.map(path, &(&1.value)) == ~w(a c e f)a
   end
 end
