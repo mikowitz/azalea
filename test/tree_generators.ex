@@ -1,16 +1,17 @@
 defmodule Azalea.Test.TreeGenerators do
   alias Azalea, as: A
 
+  def tree_value do
+    StreamData.string(:alphanumeric)
+  end
+
   def gen_empty_tree do
-    StreamData.map(StreamData.string(:printable), &A.Tree.new/1)
+    StreamData.map(tree_value(), &A.Tree.new/1)
   end
 
   def gen_tree, do: StreamData.map(StreamData.integer(1..5), &gen_tree/1)
   def gen_tree(depth) do
-    gen_tree(
-      depth,
-      Enum.at(gen_empty_tree(), 0)
-    )
+    gen_tree(depth, Enum.at(gen_empty_tree(), 0))
   end
   def gen_tree(0, tree), do: tree
   def gen_tree(n, tree) do

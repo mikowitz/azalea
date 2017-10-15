@@ -1,7 +1,7 @@
 defmodule Azalea.Tree do
   @type t :: %Azalea.Tree{value: any, children: [Azalea.Tree.t]}
 
-  defstruct [:value, :children, :id]
+  defstruct [:value, :children]
 
   @spec new :: Azalea.Tree.t
   @spec new(any) :: Azalea.Tree.t
@@ -9,7 +9,7 @@ defmodule Azalea.Tree do
   def new, do: new(nil)
   def new(value), do: new(value, [])
   def new(value, children) do
-    %__MODULE__{value: value, children: wrap_children(children), id: make_ref()}
+    %__MODULE__{value: value, children: wrap_children(children)}
   end
 
   @spec is_child?(Azalea.Tree.t, Azalea.Tree.t) :: boolean
