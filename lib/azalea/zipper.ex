@@ -11,7 +11,23 @@ defmodule Azalea.Zipper do
       crumbs: []
     }
   end
-  
+
+  def is_root?(%Azalea.Zipper{crumbs: []}), do: true
+  def is_root?(%Azalea.Zipper{crumbs: [%{parent: nil}|_]}), do: true
+  def is_root?(%Azalea.Zipper{}), do: false
+
+  def is_end?(zipper = %Azalea.Zipper{}) do
+    root = to_root(zipper).focus
+    zipper.focus == Enum.map(root, &(&1)) |> List.last
+  end
+
+  def to_root(zipper = %Azalea.Zipper{}) do
+    case is_root?(zipper) do
+      true -> zipper
+      false -> zipper |> up |> to_root
+    end
+  end
+
   def down(%Azalea.Zipper{focus: %Azalea.Tree{children: []}}) do
     {:error, :no_children}
   end
@@ -77,6 +93,39 @@ defmodule Azalea.Zipper do
         left: new_left,
         right: new_right,
         parent: crumb.parent
+      }
+      %Azalea.Zipper{
+        focus: new_focus,
+        crumbs: [new_crumb|crumbs]
+      }
+    end
+  end
+
+  def rightmost(zipper = %Azalea.Zipper{crumbs: [%{right: []}]}), do: zipper
+  def rightmost(zipper = %Azalea.Zipper{}) do
+    with [crumb|crumbs] <- zipper.crumbs do
+      {new_focus, new_left} = List.pop_at(crumb.right, -1)
+      new_crumb = %Azalea.Zipper.Crumb{
+        parent: crumb.parent,
+        right: [],
+        left: crumb.left ++ [zipper.focus|new_left]
+      }
+      %Azalea.Zipper{
+        focus: new_focus,
+        crumbs: [new_crumb|crumbs]
+      }
+    end
+  end
+
+  def leftmost(zipper = %Azalea.Zipper{crumbs: [%{left: []}]}), do: zipper
+  def leftmost(zipper = %Azalea.Zipper{}) do
+    with [crumb|crumbs] <- zipper.crumbs do
+      [new_focus|new_right] = crumb.left
+
+      new_crumb = %Azalea.Zipper.Crumb{
+        parent: crumb.parent,
+        right: new_right ++ [zipper.focus|crumb.right],
+        left: []
       }
       %Azalea.Zipper{
         focus: new_focus,

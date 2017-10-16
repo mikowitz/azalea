@@ -16,8 +16,8 @@ defmodule Azalea.ZipperTest do
         A.Tree.new(:h)
       ])
     ])
-    reducer = fn tree, acc -> acc ++ [tree.value] end
-    {:ok, %{tree: tree, reducer: reducer}}
+    zipper = A.Zipper.from_tree(tree)
+    {:ok, %{tree: tree, zipper: zipper}}
   end
 
   test "from_tree/1 generates a zipper from the given tree" do
@@ -29,8 +29,7 @@ defmodule Azalea.ZipperTest do
   end
 
   test "down/1 moves to the first (leftmost) childnode", context do
-    zipper = A.Zipper.from_tree(context.tree)
-    zipper = A.Zipper.down(zipper)
+    zipper = A.Zipper.down(context.zipper)
     assert zipper.focus.value == :b
     assert length(zipper.crumbs) == 1
     crumb = Enum.at(zipper.crumbs, 0)
@@ -40,15 +39,13 @@ defmodule Azalea.ZipperTest do
   end
 
   test "down/1 returns an error tuple when there is no further child", context do
-    zipper = A.Zipper.from_tree(context.tree)
-    zipper = A.Zipper.down(zipper)
+    zipper = A.Zipper.down(context.zipper)
     error = A.Zipper.down(zipper)
     assert error == {:error, :no_children}
   end
 
   test "right/1 return the next sibling node to the right", context do
-    zipper = A.Zipper.from_tree(context.tree)
-    zipper = zipper |> A.Zipper.down |> A.Zipper.right
+    zipper = context.zipper |> A.Zipper.down |> A.Zipper.right
 
     assert zipper.focus.value == :c
     assert length(zipper.crumbs) == 2
@@ -59,15 +56,13 @@ defmodule Azalea.ZipperTest do
   end
 
   test "right/1 returns an error when there is no further sibling", context do
-    zipper = A.Zipper.from_tree(context.tree)
-    error = zipper |> A.Zipper.down |> A.Zipper.right 
+    error = context.zipper |> A.Zipper.down |> A.Zipper.right 
             |> A.Zipper.right |> A.Zipper.right
     assert error == {:error, :no_right_sibling}
   end
 
   test "up/1 moves up to the current focus' parent", context do
-    zipper = A.Zipper.from_tree(context.tree)
-    zipper = zipper |> A.Zipper.down |> A.Zipper.right |> A.Zipper.up
+    zipper = context.zipper |> A.Zipper.down |> A.Zipper.right |> A.Zipper.up
 
     assert zipper.focus.value == :a
     assert zipper.crumbs == []
@@ -83,12 +78,11 @@ defmodule Azalea.ZipperTest do
   end
 
   test "up/1 returns an error when there is no parent", context do
-    zipper = A.Zipper.from_tree(context.tree)
-    assert A.Zipper.up(zipper) == {:error, :no_parent}
+    assert A.Zipper.up(context.zipper) == {:error, :no_parent}
   end
 
   test "left/1 moves to the next left sibling", context do
-    zipper = context.tree |> A.Zipper.from_tree |> A.Zipper.down
+    zipper = context.zipper |> A.Zipper.down
              |> A.Zipper.right |> A.Zipper.left
     assert zipper.focus.value == :b
     assert length(zipper.crumbs) == 2
@@ -99,7 +93,45 @@ defmodule Azalea.ZipperTest do
   end
 
   test "left/1 returns an error if there is no previous sibling", context do
-    zipper = context.tree |> A.Zipper.from_tree |> A.Zipper.down
-    assert A.Zipper.left(zipper) == {:error, :no_left_sibling}
+    assert A.Zipper.left(context.zipper) == {:error, :no_left_sibling}
+  end
+
+  test "is_root?/1 returns true if the current focus has no parent", context do
+    assert A.Zipper.is_root?(context.zipper)
+  end
+
+  test "is_root?/1 returns false for the current focus has a parent", context do
+    refute context.zipper |> A.Zipper.down |> A.Zipper.is_root?
+  end
+
+  test "to_root/1 walks all the way back up the zipper and returns the root", context do
+    assert A.Zipper.to_root(context.zipper) == context.zipper
+    assert context.zipper |> A.Zipper.down |> A.Zipper.right |> A.Zipper.down |> A.Zipper.to_root == context.zipper
+  end
+
+  test "is_end?/1 returns true iff the focus is the end of a depth-first walk of the tree", context do
+    refute A.Zipper.is_end?(context.zipper)
+    refute context.zipper |> A.Zipper.down |> A.Zipper.is_end?
+    refute context.zipper |> A.Zipper.down |> A.Zipper.right |> A.Zipper.is_end?
+    refute context.zipper |> A.Zipper.down |> A.Zipper.right |> A.Zipper.right |> A.Zipper.is_end?
+    assert context.zipper |> A.Zipper.down |> A.Zipper.right |> A.Zipper.right |> A.Zipper.down |> A.Zipper.is_end?
+  end
+
+  test "rightmost/1 moves to the rightmost sibling, or stays there", context do
+    zipper = context.zipper |> A.Zipper.down |> A.Zipper.rightmost
+    assert zipper.focus.value == :g
+
+    assert A.Zipper.rightmost(zipper).focus.value == :g
+  end
+
+  test "leftmost/1 moves to the leftmost sibling, or stays there", context do
+    zipper = context.zipper |> A.Zipper.down |> A.Zipper.leftmost
+    assert zipper.focus.value == :b
+
+    zipper = A.Zipper.rightmost(zipper)
+
+    assert zipper.focus.value == :g
+    assert A.Zipper.leftmost(zipper).focus.value == :b
+    assert zipper |> A.Zipper.leftmost |> A.Zipper.rightmost |> (fn z -> z.focus.value end).() == :g
   end
 end
