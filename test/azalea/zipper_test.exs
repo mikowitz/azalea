@@ -134,4 +134,76 @@ defmodule Azalea.ZipperTest do
     assert A.Zipper.leftmost(zipper).focus.value == :b
     assert zipper |> A.Zipper.leftmost |> A.Zipper.rightmost |> (fn z -> z.focus.value end).() == :g
   end
+
+  test "append_child/2 adds the item as the righttmost child of the current focus, without moving", context do
+    zipper = A.Zipper.append_child(context.zipper, A.Tree.new(:i))
+    assert length(zipper.focus.children) == 4
+    assert zipper.focus.value == :a
+    assert A.Zipper.rightmost(A.Zipper.down(zipper)).focus.value == :i
+  end
+
+  test "insert_child/2 adds the item as the leftmost child of the current focus, without moving", context do
+    zipper = A.Zipper.insert_child(context.zipper, :i)
+    assert length(zipper.focus.children) == 4
+    assert zipper.focus.value == :a
+    assert A.Zipper.down(zipper).focus.value == :i
+  end
+
+  test "insert_left/2 adds the item as the left sibling of the current focus, without moving", context do
+    zipper = context.zipper |> A.Zipper.down |> A.Zipper.insert_left(:i)
+    
+    assert zipper.focus.value == :b
+    [crumb|_] = zipper.crumbs
+    assert crumb.parent.value == :a
+    assert Enum.map(crumb.right, &(&1.value)) == [:c, :g]
+    assert Enum.map(crumb.left, &(&1.value)) == [:i]
+
+    root = A.Zipper.to_root(zipper)
+    assert Enum.map(root.focus.children, &(&1.value)) == [:i, :b, :c, :g]
+    
+    ## not inserting at 0
+    zipper = context.zipper |> A.Zipper.down |> A.Zipper.right |> A.Zipper.insert_left(:i)
+    
+    assert zipper.focus.value == :c
+    [crumb|_] = zipper.crumbs
+    assert crumb.parent.value == :a
+    assert Enum.map(crumb.right, &(&1.value)) == [:g]
+    assert Enum.map(crumb.left, &(&1.value)) == [:b, :i]
+
+    root = A.Zipper.to_root(zipper)
+    assert Enum.map(root.focus.children, &(&1.value)) == [:b, :i, :c, :g]
+  end
+
+  test "insert_left/2 returns an error if called on the root", context do
+    assert A.Zipper.insert_left(context.zipper, :i) == {:error, :root_has_no_siblings}
+  end
+
+  test "insert_right/2 adds the item as the right sibling of the current focus, without moving", context do
+    zipper = context.zipper |> A.Zipper.down |> A.Zipper.insert_right(:i)
+    
+    assert zipper.focus.value == :b
+    [crumb|_] = zipper.crumbs
+    assert crumb.parent.value == :a
+    assert Enum.map(crumb.right, &(&1.value)) == [:i, :c, :g]
+    assert Enum.map(crumb.left, &(&1.value)) == []
+
+    root = A.Zipper.to_root(zipper)
+    assert Enum.map(root.focus.children, &(&1.value)) == [:b, :i, :c, :g]
+    
+    ## not inserting at 0
+    zipper = context.zipper |> A.Zipper.down |> A.Zipper.rightmost |> A.Zipper.insert_right(:i)
+    
+    assert zipper.focus.value == :g
+    [crumb|_] = zipper.crumbs
+    assert crumb.parent.value == :a
+    assert Enum.map(crumb.right, &(&1.value)) == [:i]
+    assert Enum.map(crumb.left, &(&1.value)) == [:b, :c]
+
+    root = A.Zipper.to_root(zipper)
+    assert Enum.map(root.focus.children, &(&1.value)) == [:b, :c, :g, :i]
+  end
+
+  test "insert_right/2 returns an error if called on the root", context do
+    assert A.Zipper.insert_right(context.zipper, :i) == {:error, :root_has_no_siblings}
+  end
 end
