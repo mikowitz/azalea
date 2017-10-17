@@ -7,25 +7,13 @@ defmodule Azalea.Tree do
       %Azalea.Tree{
         value: :a,
         children: [
-          %Azalea.Tree{
-            value: :b,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :c,
-            children: []
-          },
+          %Azalea.Tree{value: :b, children: []},
+          %Azalea.Tree{value: :c, children: []},
           %Azalea.Tree{
             value: :d,
             children: [
-              %Azalea.Tree{
-                value: :e,
-                children: []
-              },
-              %Azalea.Tree{
-                value: :f,
-                children: []
-              },
+              %Azalea.Tree{value: :e, children: []},
+              %Azalea.Tree{value: :f, children: []}
             ]
           }
         ]
@@ -46,18 +34,12 @@ defmodule Azalea.Tree do
   `new/0` returns an empty tree
 
       iex> Azalea.Tree.new()
-      %Azalea.Tree{
-        value: nil,
-        children: []
-      }
+      %Azalea.Tree{value: nil, children: []}
   
   `new/1` returns a tree with the argument assigned as the value, and no children
 
       iex> Azalea.Tree.new({1, :one, "un"})
-      %Azalea.Tree{
-        value: {1, :one, "un"},
-        children: []
-      }
+      %Azalea.Tree{value: {1, :one, "un"}, children: []}
 
   `new/2` returns a tree with the first argument assigned to the value, and the second argument (a list)
   assigned to the tree's children, with each element wrapped in an `Azalea.Tree`
@@ -66,14 +48,8 @@ defmodule Azalea.Tree do
       %Azalea.Tree{
         value: :a,
         children: [
-          %Azalea.Tree{
-            value: :b,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :c,
-            children: []
-          }
+          %Azalea.Tree{value: :b, children: []},
+          %Azalea.Tree{value: :c, children: []}
         ]
       }
   
@@ -109,22 +85,10 @@ defmodule Azalea.Tree do
       %Azalea.Tree{
         value: :a,
         children: [
-          %Azalea.Tree{
-            value: "e",
-            children: []
-          },
-          %Azalea.Tree{
-            value: :b,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :c,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :d,
-            children: []
-          }
+          %Azalea.Tree{value: "e", children: []},
+          %Azalea.Tree{value: :b, children: []},
+          %Azalea.Tree{value: :c, children: []},
+          %Azalea.Tree{value: :d, children: []}
         ]
       }
 
@@ -135,22 +99,10 @@ defmodule Azalea.Tree do
       %Azalea.Tree{
         value: :a,
         children: [
-          %Azalea.Tree{
-            value: "f",
-            children: []
-          },
-          %Azalea.Tree{
-            value: :b,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :c,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :d,
-            children: []
-          }
+          %Azalea.Tree{value: "f", children: []},
+          %Azalea.Tree{value: :b, children: []},
+          %Azalea.Tree{value: :c, children: []},
+          %Azalea.Tree{value: :d, children: []}
         ]
       }
 
@@ -171,22 +123,10 @@ defmodule Azalea.Tree do
       %Azalea.Tree{
         value: :a,
         children: [
-          %Azalea.Tree{
-            value: :b,
-            children: []
-          },
-          %Azalea.Tree{
-            value: "e",
-            children: []
-          },
-          %Azalea.Tree{
-            value: :c,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :d,
-            children: []
-          }
+          %Azalea.Tree{value: :b, children: []},
+          %Azalea.Tree{value: "e", children: []},
+          %Azalea.Tree{value: :c, children: []},
+          %Azalea.Tree{value: :d, children: []}
         ]
       }
 
@@ -197,22 +137,10 @@ defmodule Azalea.Tree do
       %Azalea.Tree{
         value: :a,
         children: [
-          %Azalea.Tree{
-            value: :b,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :c,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :d,
-            children: []
-          },
-          %Azalea.Tree{
-            value: "f",
-            children: []
-          }
+          %Azalea.Tree{value: :b, children: []},
+          %Azalea.Tree{value: :c, children: []},
+          %Azalea.Tree{value: :d, children: []},
+          %Azalea.Tree{value: "f", children: []}
         ]
       }
 
@@ -235,14 +163,8 @@ defmodule Azalea.Tree do
         %Azalea.Tree{
           value: :a,
           children: [
-            %Azalea.Tree{
-              value: :c,
-              children: []
-            },
-            %Azalea.Tree{
-              value: :d,
-              children: []
-            }
+            %Azalea.Tree{value: :c, children: []},
+            %Azalea.Tree{value: :d, children: []}
           ]
         }
       }
@@ -265,14 +187,8 @@ defmodule Azalea.Tree do
         %Azalea.Tree{
           value: :a,
           children: [
-            %Azalea.Tree{
-              value: :b,
-              children: []
-            },
-            %Azalea.Tree{
-              value: :c,
-              children: []
-            }
+            %Azalea.Tree{value: :b, children: []},
+            %Azalea.Tree{value: :c, children: []}
           ]
         }
       }
@@ -293,18 +209,9 @@ defmodule Azalea.Tree do
       %Azalea.Tree{
         value: "node-a",
         children: [
-          %Azalea.Tree{
-            value: "node-b",
-            children: []
-          },
-          %Azalea.Tree{
-            value: "node-c",
-            children: []
-          },
-          %Azalea.Tree{
-            value: "node-d",
-            children: []
-          }
+          %Azalea.Tree{value: "node-b", children: []},
+          %Azalea.Tree{value: "node-c", children: []},
+          %Azalea.Tree{value: "node-d", children: []}
         ]
       }
   
@@ -316,32 +223,14 @@ defmodule Azalea.Tree do
         %Azalea.Tree{
           value: "node-a",
           children: [
-            %Azalea.Tree{
-              value: :b,
-              children: []
-            },
-            %Azalea.Tree{
-              value: :c,
-              children: []
-            },
-            %Azalea.Tree{
-              value: :d,
-              children: []
-            }
+            %Azalea.Tree{value: :b, children: []},
+            %Azalea.Tree{value: :c, children: []},
+            %Azalea.Tree{value: :d, children: []}
           ]
         },
-        %Azalea.Tree{
-          value: "node-b",
-          children: []
-        },
-        %Azalea.Tree{
-          value: "node-c",
-          children: []
-        },
-        %Azalea.Tree{
-          value: "node-d",
-          children: []
-        }
+        %Azalea.Tree{value: "node-b", children: []},
+        %Azalea.Tree{value: "node-c", children: []},
+        %Azalea.Tree{value: "node-d", children: []}
       ]
 
   """
@@ -384,46 +273,25 @@ defmodule Azalea.Tree do
         %Azalea.Tree{
           value: :a,
           children: [
-            %Azalea.Tree{
-              value: :b,
-              children: []
-            },
+            %Azalea.Tree{value: :b, children: []},
             %Azalea.Tree{
               value: :c,
               children: [
-                %Azalea.Tree{
-                  value: :e,
-                  children: []
-                },
-                %Azalea.Tree{
-                  value: :f,
-                  children: []
-                }
+                %Azalea.Tree{value: :e, children: []},
+                %Azalea.Tree{value: :f, children: []}
               ]
             },
-            %Azalea.Tree{
-              value: :d,
-              children: []
-            }
+            %Azalea.Tree{value: :d, children: []}
           ]
         },
         %Azalea.Tree{
           value: :c,
           children: [
-            %Azalea.Tree{
-              value: :e,
-              children: []
-            },
-            %Azalea.Tree{
-              value: :f,
-              children: []
-            }
+            %Azalea.Tree{value: :e, children: []},
+            %Azalea.Tree{value: :f, children: []}
           ]
         },
-        %Azalea.Tree{
-          value: :e,
-          children: []
-        }
+        %Azalea.Tree{value: :e, children: []}
       ]
 
   """
