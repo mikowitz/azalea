@@ -1,4 +1,40 @@
 defmodule Azalea.Tree do
+  @moduledoc """
+  `Azalea.Tree` models a rose, or multi-way tree. A rose tree is an `n`-ary (with unbounded `n`) tree 
+  where each branch of a node is itself a rose tree. For example:
+
+      iex> Azalea.Tree.new(:a, [:b, :c, Azalea.Tree.new(:d, [:e, :f])])
+      %Azalea.Tree{
+        value: :a,
+        children: [
+          %Azalea.Tree{
+            value: :b,
+            children: []
+          },
+          %Azalea.Tree{
+            value: :c,
+            children: []
+          },
+          %Azalea.Tree{
+            value: :d,
+            children: [
+              %Azalea.Tree{
+                value: :e,
+                children: []
+              },
+              %Azalea.Tree{
+                value: :f,
+                children: []
+              },
+            ]
+          }
+        ]
+      }
+
+    `Azalea.Tree` nodes are unbalanced and child ordering maintains insertion order. See `add_child/2` and `insert_child/3` below.
+
+  """
+
   @type t :: %Azalea.Tree{value: any, children: [Azalea.Tree.t]}
 
   defstruct [:value, :children]
@@ -42,12 +78,8 @@ defmodule Azalea.Tree do
       }
   
   """
-  @spec new :: Azalea.Tree.t
-  @spec new(any) :: Azalea.Tree.t
   @spec new(any, [any]) :: Azalea.Tree.t
-  def new, do: new(nil)
-  def new(value), do: new(value, [])
-  def new(value, children) do
+  def new(value \\ nil, children \\ []) do
     %__MODULE__{value: value, children: wrap_children(children)}
   end
 
@@ -346,59 +378,62 @@ defmodule Azalea.Tree do
 
   Finds a path through `tree` to the `child`.
 
-    iex> tree = Azalea.Tree.new(:a, [:b, Azalea.Tree.new(:c, [:e, :f]), :d])
-    iex> Azalea.Tree.path_to(Azalea.Tree.new(:e), tree)
-    [
-      %Azalea.Tree{
-        value: :a,
-        children: [
-          %Azalea.Tree{
-            value: :b,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :c,
-            children: [
-              %Azalea.Tree{
-                value: :e,
-                children: []
-              },
-              %Azalea.Tree{
-                value: :f,
-                children: []
-              }
-            ]
-          },
-          %Azalea.Tree{
-            value: :d,
-            children: []
-          }
-        ]
-      },
-      %Azalea.Tree{
-        value: :c,
-        children: [
-          %Azalea.Tree{
-            value: :e,
-            children: []
-          },
-          %Azalea.Tree{
-            value: :f,
-            children: []
-          }
-        ]
-      },
-      %Azalea.Tree{
-        value: :e,
-        children: []
-      }
-    ]
+      iex> tree = Azalea.Tree.new(:a, [:b, Azalea.Tree.new(:c, [:e, :f]), :d])
+      iex> Azalea.Tree.path_to(Azalea.Tree.new(:e), tree)
+      [
+        %Azalea.Tree{
+          value: :a,
+          children: [
+            %Azalea.Tree{
+              value: :b,
+              children: []
+            },
+            %Azalea.Tree{
+              value: :c,
+              children: [
+                %Azalea.Tree{
+                  value: :e,
+                  children: []
+                },
+                %Azalea.Tree{
+                  value: :f,
+                  children: []
+                }
+              ]
+            },
+            %Azalea.Tree{
+              value: :d,
+              children: []
+            }
+          ]
+        },
+        %Azalea.Tree{
+          value: :c,
+          children: [
+            %Azalea.Tree{
+              value: :e,
+              children: []
+            },
+            %Azalea.Tree{
+              value: :f,
+              children: []
+            }
+          ]
+        },
+        %Azalea.Tree{
+          value: :e,
+          children: []
+        }
+      ]
 
   """
   @spec path_to(Azalea.Tree.t, Azalea.Tree.t) :: [Azalea.Tree.t]
   def path_to(child, tree) do
     find_path(tree, child, [])
   end
+
+
+  ## Private
 
   defp find_path(tree, target, acc) when tree == target do
     [tree|acc]
@@ -422,6 +457,9 @@ defmodule Azalea.Tree do
 
   @behaviour Access
 
+  @doc """
+  Implemenation of the `Access` behaviour. See `Access.fetch/2` for details.
+  """
   def fetch(%Azalea.Tree{children: children}, index) when is_integer(index) do
     case Enum.at(children, index) do
       nil -> :error
@@ -429,6 +467,9 @@ defmodule Azalea.Tree do
     end
   end
 
+  @doc """
+  Implemenation of the `Access` behaviour. See `Access.get/3` for details.
+  """
   def get(tree, index, default \\ nil) when is_integer(index) do
     case fetch(tree, index) do
       {:ok, child} -> child
@@ -436,6 +477,9 @@ defmodule Azalea.Tree do
     end
   end
 
+  @doc """
+  Implemenation of the `Access` behaviour. See `Access.get_and_update/3` for details.
+  """
   def get_and_update(tree, index, fun) do
     value = get(tree, index)
 
@@ -448,6 +492,9 @@ defmodule Azalea.Tree do
     end
   end
 
+  @doc """
+  Implemenation of the `Access` behaviour. See `Access.pop/2` for details.
+  """
   def pop(tree, index) do
     case get(tree, index) do
       nil -> {nil, tree}
