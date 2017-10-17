@@ -6,6 +6,7 @@ defmodule Azalea.Mixfile do
 
   @deps [
     { :credo, "~> 0.8.8", only: [:dev, :test], runtime: false },
+    { :ex_doc, "~> 0.18.1", only: [:dev, :test], runtime: false},
     { :mix_test_watch, "~> 0.5.0", only: :dev, runtime: false },
     { :stream_data, "~> 0.3.0" }
   ]

@@ -3,6 +3,8 @@ defmodule Azalea.TreeTest do
   use ExUnitProperties
   import Azalea.Test.TreeGenerators
 
+  doctest Azalea.Tree
+
   alias Azalea, as: A
 
   setup do
