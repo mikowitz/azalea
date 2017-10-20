@@ -2,6 +2,7 @@ defmodule Azalea.ZipperTest do
   use ExUnit.Case, async: true
   use ExUnitProperties
   import Azalea.Test.TreeGenerators
+  doctest Azalea.Zipper
 
   alias Azalea, as: A
 
