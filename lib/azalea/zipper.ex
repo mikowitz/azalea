@@ -88,10 +88,8 @@ defmodule Azalea.Zipper do
 
   """
   @spec is_end?(Azalea.Zipper.t) :: boolean
-  def is_end?(zipper = %Azalea.Zipper{}) do
-    root = to_root(zipper).focus
-    zipper.focus == Enum.map(root, &(&1)) |> List.last
-  end
+  def is_end?(%Azalea.Zipper{focus: %{children: []}, crumbs: [%{right: []}|_]}), do: true
+  def is_end?(%Azalea.Zipper{}), do: false
 
   @doc """
   
@@ -373,22 +371,20 @@ defmodule Azalea.Zipper do
 
   """
   @spec insert_left(Azalea.Zipper.t, any) :: Azalea.Zipper.t | {:error, :root_has_no_siblings}
+  def insert_left(%Azalea.Zipper{crumbs: []}, _), do: {:error, :root_has_no_siblings}
+  def insert_left(%Azalea.Zipper{crumbs: [%{parent: nil}|_]}, _), do: {:error, :root_has_no_siblings}
   def insert_left(zipper = %Azalea.Zipper{}, sibling) do
-    case is_root?(zipper) do
-      true -> {:error, :root_has_no_siblings}
-      false ->
-        [crumb|crumbs] = zipper.crumbs
-        new_parent = Azalea.Tree.insert_child(crumb.parent, sibling, length(crumb.left))
-        new_left = crumb.left ++ [Enum.at(new_parent.children, length(crumb.left))]
-        new_crumb = %{ crumb | parent: new_parent, left: new_left}
-        new_crumbs = Enum.map(crumbs, fn c ->
-          case c.parent == crumb.parent do
-            true -> %{c | parent: new_parent }
-            false -> c
-          end
-        end)
-        %{ zipper | crumbs: [new_crumb|new_crumbs] }
-    end
+    [crumb|crumbs] = zipper.crumbs
+    new_parent = Azalea.Tree.insert_child(crumb.parent, sibling, length(crumb.left))
+    new_left = crumb.left ++ [Enum.at(new_parent.children, length(crumb.left))]
+    new_crumb = %{crumb | parent: new_parent, left: new_left}
+    new_crumbs = Enum.map(crumbs, fn c ->
+      case c.parent == crumb.parent do
+        true -> %{c | parent: new_parent}
+        false -> c
+      end
+    end)
+    %{zipper | crumbs: [new_crumb|new_crumbs]}
   end
 
   @doc """
@@ -408,22 +404,20 @@ defmodule Azalea.Zipper do
 
   """
   @spec insert_right(Azalea.Zipper.t, any) :: Azalea.Zipper.t | {:error, :root_has_no_siblings}
+  def insert_right(%Azalea.Zipper{crumbs: []}, _), do: {:error, :root_has_no_siblings}
+  def insert_right(%Azalea.Zipper{crumbs: [%{parent: nil}|_]}, _), do: {:error, :root_has_no_siblings}
   def insert_right(zipper = %Azalea.Zipper{}, sibling) do
-    case is_root?(zipper) do
-      true -> {:error, :root_has_no_siblings}
-      false ->
-        [crumb|crumbs] = zipper.crumbs
-        new_sibling_index = length(crumb.left) + 1
-        new_parent = Azalea.Tree.insert_child(crumb.parent, sibling, new_sibling_index)
-        new_right = [Enum.at(new_parent.children, new_sibling_index)|crumb.right]
-        new_crumb = %{ crumb | parent: new_parent, right: new_right}
-        new_crumbs = Enum.map(crumbs, fn c ->
-          case c.parent == crumb.parent do
-            true -> %{c | parent: new_parent }
-            false -> c
-          end
-        end)
-        %{ zipper | crumbs: [new_crumb|new_crumbs] }
-    end
+    [crumb|crumbs] = zipper.crumbs
+    new_sibling_index = length(crumb.left) + 1
+    new_parent = Azalea.Tree.insert_child(crumb.parent, sibling, new_sibling_index)
+    new_right = [Enum.at(new_parent.children, new_sibling_index)|crumb.right]
+    new_crumb = %{crumb | parent: new_parent, right: new_right}
+    new_crumbs = Enum.map(crumbs, fn c ->
+      case c.parent == crumb.parent do
+        true -> %{c | parent: new_parent}
+        false -> c
+      end
+    end)
+    %{zipper | crumbs: [new_crumb|new_crumbs]}
   end
 end
