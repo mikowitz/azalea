@@ -300,7 +300,6 @@ defmodule Azalea.Tree do
     find_path(tree, child, [])
   end
 
-
   ## Private
 
   defp find_path(tree, target, acc) when tree == target do

@@ -12,22 +12,15 @@ defmodule Azalea.Zipper do
   See [Huet](https://www.st.cs.uni-saarland.de/edu/seminare/2005/advanced-fp/docs/huet-zipper.pdf) for a more complete definition.
 
   """
-  defmodule Crumb do
-    @moduledoc """
 
-    `Azalea.Zipper.Crumb` stores metadata relative to the current focus of a zipper. It maintains a record of the focus's
-    parent, and its left and right siblings.
-
-    """
-
-    defstruct [:parent, :left, :right]
-
-    @type t :: %Azalea.Zipper.Crumb{parent: Azalea.Tree.t, left: [Azalea.Tree.t], right: [Azalea.Tree.t]}
-  end
+  alias Azalea.{Tree, Zipper, Zipper.Crumb}
 
   defstruct [:focus, :crumbs]
 
-  @type t :: %Azalea.Zipper{focus: Azalea.Tree.t, crumbs: [Azalea.Tree.Crumb.t]}
+  @type t :: %Azalea.Zipper{focus: Tree.t, crumbs: [Crumb.t]}
+  @type no_sibling_error :: {:error, :root_has_no_siblings}
+
+  @no_sibling_error {:error, :root_has_no_siblings}
 
   @doc """
 
@@ -48,9 +41,9 @@ defmodule Azalea.Zipper do
       }
 
   """
-  @spec from_tree(Azalea.Tree.t) :: Azalea.Zipper.t
-  def from_tree(tree = %Azalea.Tree{}) do
-    %Azalea.Zipper{
+  @spec from_tree(Tree.t) :: Zipper.t
+  def from_tree(tree = %Tree{}) do
+    %Zipper{
       focus: tree,
       crumbs: []
     }
@@ -69,10 +62,10 @@ defmodule Azalea.Zipper do
       false
 
   """
-  @spec is_root?(Azalea.Zipper.t) :: boolean
-  def is_root?(%Azalea.Zipper{crumbs: []}), do: true
-  def is_root?(%Azalea.Zipper{crumbs: [%{parent: nil}|_]}), do: true
-  def is_root?(%Azalea.Zipper{}), do: false
+  @spec is_root?(Zipper.t) :: boolean
+  def is_root?(%Zipper{crumbs: []}), do: true
+  def is_root?(%Zipper{crumbs: [%{parent: nil}|_]}), do: true
+  def is_root?(%Zipper{}), do: false
 
   @doc """
 
@@ -87,9 +80,9 @@ defmodule Azalea.Zipper do
       true
 
   """
-  @spec is_end?(Azalea.Zipper.t) :: boolean
-  def is_end?(%Azalea.Zipper{focus: %{children: []}, crumbs: [%{right: []}|_]}), do: true
-  def is_end?(%Azalea.Zipper{}), do: false
+  @spec is_end?(Zipper.t) :: boolean
+  def is_end?(%Zipper{focus: %{children: []}, crumbs: [%{right: []}|_]}), do: true
+  def is_end?(%Zipper{}), do: false
 
   @doc """
   
@@ -105,8 +98,8 @@ defmodule Azalea.Zipper do
       :a
 
   """
-  @spec to_root(Azalea.Zipper.t) :: Azalea.Zipper.t
-  def to_root(zipper = %Azalea.Zipper{}) do
+  @spec to_root(Zipper.t) :: Zipper.t
+  def to_root(zipper = %Zipper{}) do
     case is_root?(zipper) do
       true -> zipper
       false -> zipper |> up |> to_root
@@ -125,14 +118,14 @@ defmodule Azalea.Zipper do
       {:error, :no_children}
   
   """
-  @spec down(Azalea.Zipper.t) :: Azalea.Zipper.t | {:error, :no_children}
-  def down(%Azalea.Zipper{focus: %Azalea.Tree{children: []}}) do
+  @spec down(Zipper.t) :: Zipper.t | {:error, :no_children}
+  def down(%Zipper{focus: %Tree{children: []}}) do
     {:error, :no_children}
   end
-  def down(zipper = %Azalea.Zipper{focus: focus = %Azalea.Tree{children: [c|r]}}) do
-    %Azalea.Zipper{
+  def down(zipper = %Zipper{focus: focus = %Tree{children: [c|r]}}) do
+    %Zipper{
       focus: c,
-      crumbs: [%Azalea.Zipper.Crumb{
+      crumbs: [%Crumb{
         parent: focus,
         left: [],
         right: r
@@ -153,23 +146,23 @@ defmodule Azalea.Zipper do
       :c
 
   """
-  @spec right(Azalea.Zipper.t) :: Azalea.Zipper.t | {:error, :no_right_sibling}
-  def right(%Azalea.Zipper{crumbs: []}) do
+  @spec right(Zipper.t) :: Zipper.t | {:error, :no_right_sibling}
+  def right(%Zipper{crumbs: []}) do
     {:error, :no_right_sibling}
   end
-  def right(%Azalea.Zipper{crumbs: [%Azalea.Zipper.Crumb{right: []}|_]}) do
+  def right(%Zipper{crumbs: [%Zipper.Crumb{right: []}|_]}) do
     {:error, :no_right_sibling}
   end
-  def right(zipper = %Azalea.Zipper{}) do
+  def right(zipper = %Zipper{}) do
     with crumbs = [crumb|_] <- zipper.crumbs do
       new_left = (crumb.left ++ [zipper.focus])
       [new_focus|new_right] = crumb.right
-      new_crumb = %Azalea.Zipper.Crumb{
+      new_crumb = %Zipper.Crumb{
         left: new_left,
         right: new_right,
         parent: crumb.parent
       }
-      %Azalea.Zipper{
+      %Zipper{
         focus: new_focus,
         crumbs: [new_crumb|crumbs]
       }
@@ -191,16 +184,16 @@ defmodule Azalea.Zipper do
       :a
 
   """
-  @spec up(Azalea.Zipper.t) :: Azalea.Zipper.t | {:error, :no_parent}
-  def up(%Azalea.Zipper{crumbs: []}) do
+  @spec up(Zipper.t) :: Zipper.t | {:error, :no_parent}
+  def up(%Zipper{crumbs: []}) do
     {:error, :no_parent}
   end
-  def up(%Azalea.Zipper{crumbs: [%Azalea.Zipper.Crumb{parent: nil}|_]}) do
+  def up(%Zipper{crumbs: [%Zipper.Crumb{parent: nil}|_]}) do
     {:error, :no_parent}
   end
-  def up(zipper = %Azalea.Zipper{}) do
+  def up(zipper = %Zipper{}) do
     with [crumb|crumbs] <- zipper.crumbs do
-      %Azalea.Zipper{
+      %Zipper{
         focus: crumb.parent,
         crumbs: Enum.drop_while(crumbs, fn c -> c.parent == crumb.parent end)
       }
@@ -222,23 +215,23 @@ defmodule Azalea.Zipper do
       :c
 
   """
-  @spec left(Azalea.Zipper.t) :: Azalea.Zipper.t | {:error, :no_left_sibling}
-  def left(%Azalea.Zipper{crumbs: []}) do
+  @spec left(Zipper.t) :: Zipper.t | {:error, :no_left_sibling}
+  def left(%Zipper{crumbs: []}) do
     {:error, :no_left_sibling}
   end
-  def left(%Azalea.Zipper{crumbs: [%Azalea.Zipper.Crumb{left: []}|_]}) do
+  def left(%Zipper{crumbs: [%Zipper.Crumb{left: []}|_]}) do
     {:error, :no_left_sibling}
   end
-  def left(zipper = %Azalea.Zipper{}) do
+  def left(zipper = %Zipper{}) do
     with [crumb|crumbs] <- zipper.crumbs do
       new_right = [zipper.focus|crumb.right]
       {new_focus, new_left} = List.pop_at(crumb.left, -1)
-      new_crumb = %Azalea.Zipper.Crumb{
+      new_crumb = %Zipper.Crumb{
         left: new_left,
         right: new_right,
         parent: crumb.parent
       }
-      %Azalea.Zipper{
+      %Zipper{
         focus: new_focus,
         crumbs: [new_crumb|crumbs]
       }
@@ -260,18 +253,18 @@ defmodule Azalea.Zipper do
       :d
 
   """
-  @spec rightmost(Azalea.Zipper.t) :: Azalea.Zipper.t
-  def rightmost(zipper = %Azalea.Zipper{crumbs: []}), do: zipper
-  def rightmost(zipper = %Azalea.Zipper{crumbs: [%{right: []}]}), do: zipper
-  def rightmost(zipper = %Azalea.Zipper{}) do
+  @spec rightmost(Zipper.t) :: Zipper.t
+  def rightmost(zipper = %Zipper{crumbs: []}), do: zipper
+  def rightmost(zipper = %Zipper{crumbs: [%{right: []}]}), do: zipper
+  def rightmost(zipper = %Zipper{}) do
     with [crumb|crumbs] <- zipper.crumbs do
       {new_focus, new_left} = List.pop_at(crumb.right, -1)
-      new_crumb = %Azalea.Zipper.Crumb{
+      new_crumb = %Zipper.Crumb{
         parent: crumb.parent,
         right: [],
         left: crumb.left ++ [zipper.focus|new_left]
       }
-      %Azalea.Zipper{
+      %Zipper{
         focus: new_focus,
         crumbs: [new_crumb|crumbs]
       }
@@ -291,19 +284,19 @@ defmodule Azalea.Zipper do
       :b
 
   """
-  @spec leftmost(Azalea.Zipper.t) :: Azalea.Zipper.t
-  def leftmost(zipper = %Azalea.Zipper{crumbs: []}), do: zipper
-  def leftmost(zipper = %Azalea.Zipper{crumbs: [%{left: []}]}), do: zipper
-  def leftmost(zipper = %Azalea.Zipper{}) do
+  @spec leftmost(Zipper.t) :: Zipper.t
+  def leftmost(zipper = %Zipper{crumbs: []}), do: zipper
+  def leftmost(zipper = %Zipper{crumbs: [%{left: []}]}), do: zipper
+  def leftmost(zipper = %Zipper{}) do
     with [crumb|crumbs] <- zipper.crumbs do
       [new_focus|new_right] = crumb.left
 
-      new_crumb = %Azalea.Zipper.Crumb{
+      new_crumb = %Zipper.Crumb{
         parent: crumb.parent,
         right: new_right ++ [zipper.focus|crumb.right],
         left: []
       }
-      %Azalea.Zipper{
+      %Zipper{
         focus: new_focus,
         crumbs: [new_crumb|crumbs]
       }
@@ -324,10 +317,10 @@ defmodule Azalea.Zipper do
       :e
 
   """
-  @spec append_child(Azalea.Zipper.t, any) :: Azalea.Zipper.t
-  def append_child(zipper = %Azalea.Zipper{focus: %Azalea.Tree{}}, child) do
-    %Azalea.Zipper{
-      focus: Azalea.Tree.insert_child(zipper.focus, child, -1),
+  @spec append_child(Zipper.t, any) :: Zipper.t
+  def append_child(zipper = %Zipper{focus: %Tree{}}, child) do
+    %Zipper{
+      focus: Tree.insert_child(zipper.focus, child, -1),
       crumbs: zipper.crumbs
     }
   end
@@ -346,10 +339,10 @@ defmodule Azalea.Zipper do
       :e
 
   """
-  @spec insert_child(Azalea.Zipper.t, any) :: Azalea.Zipper.t
-  def insert_child(zipper = %Azalea.Zipper{focus: %Azalea.Tree{}}, child) do
-    %Azalea.Zipper{
-      focus: Azalea.Tree.insert_child(zipper.focus, child, 0),
+  @spec insert_child(Zipper.t, any) :: Zipper.t
+  def insert_child(zipper = %Zipper{focus: %Tree{}}, child) do
+    %Zipper{
+      focus: Tree.insert_child(zipper.focus, child, 0),
       crumbs: zipper.crumbs
     }
   end
@@ -370,12 +363,12 @@ defmodule Azalea.Zipper do
       :e
 
   """
-  @spec insert_left(Azalea.Zipper.t, any) :: Azalea.Zipper.t | {:error, :root_has_no_siblings}
-  def insert_left(%Azalea.Zipper{crumbs: []}, _), do: {:error, :root_has_no_siblings}
-  def insert_left(%Azalea.Zipper{crumbs: [%{parent: nil}|_]}, _), do: {:error, :root_has_no_siblings}
-  def insert_left(zipper = %Azalea.Zipper{}, sibling) do
+  @spec insert_left(Zipper.t, any) :: Zipper.t | no_sibling_error
+  def insert_left(%Zipper{crumbs: []}, _), do: @no_sibling_error
+  def insert_left(%Zipper{crumbs: [%{parent: nil}|_]}, _), do: @no_sibling_error
+  def insert_left(zipper = %Zipper{}, sibling) do
     [crumb|crumbs] = zipper.crumbs
-    new_parent = Azalea.Tree.insert_child(crumb.parent, sibling, length(crumb.left))
+    new_parent = Tree.insert_child(crumb.parent, sibling, length(crumb.left))
     new_left = crumb.left ++ [Enum.at(new_parent.children, length(crumb.left))]
     new_crumb = %{crumb | parent: new_parent, left: new_left}
     new_crumbs = Enum.map(crumbs, fn c ->
@@ -403,13 +396,13 @@ defmodule Azalea.Zipper do
       :e
 
   """
-  @spec insert_right(Azalea.Zipper.t, any) :: Azalea.Zipper.t | {:error, :root_has_no_siblings}
-  def insert_right(%Azalea.Zipper{crumbs: []}, _), do: {:error, :root_has_no_siblings}
-  def insert_right(%Azalea.Zipper{crumbs: [%{parent: nil}|_]}, _), do: {:error, :root_has_no_siblings}
-  def insert_right(zipper = %Azalea.Zipper{}, sibling) do
+  @spec insert_right(Zipper.t, any) :: Zipper.t | no_sibling_error
+  def insert_right(%Zipper{crumbs: []}, _), do: @no_sibling_error
+  def insert_right(%Zipper{crumbs: [%{parent: nil}|_]}, _), do: @no_sibling_error
+  def insert_right(zipper = %Zipper{}, sibling) do
     [crumb|crumbs] = zipper.crumbs
     new_sibling_index = length(crumb.left) + 1
-    new_parent = Azalea.Tree.insert_child(crumb.parent, sibling, new_sibling_index)
+    new_parent = Tree.insert_child(crumb.parent, sibling, new_sibling_index)
     new_right = [Enum.at(new_parent.children, new_sibling_index)|crumb.right]
     new_crumb = %{crumb | parent: new_parent, right: new_right}
     new_crumbs = Enum.map(crumbs, fn c ->

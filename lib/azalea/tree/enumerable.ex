@@ -16,4 +16,3 @@ defimpl Enumerable, for: Azalea.Tree do
     Enum.reduce(tree.children, fun.(tree, acc), &reduce(&1, &2, fun))
   end
 end
-

@@ -18,7 +18,7 @@ if Mix.env == :dev do
     tasks: [
       "test",
       "docs",
-      "credo"
+      "credo --strict"
     ]
 end
 
